@@ -8,7 +8,7 @@ from airouter import intentions
 from airouter.dispatcher import IntentionDispatcher
 from airouter.openai_utils import init_openai
 from airouter.processor import IntentionProcessor
-from airouter.router import IntentionRouter, TextInput
+from airouter.router import IntentionRouter, TextInput, IntentionContext, Intention
 
 OPENAI_API_KEY = ''
 TELEGRAM_TOKEN = ''
@@ -39,18 +39,18 @@ async def message_handler(message: Message) -> None:
 
 
 @intention_router.route(intentions.CREATE_TASK)
-async def create_task_handler(intention, text_input):
-    return f'create_task: {text_input}'
+async def create_task_handler(intention: Intention, context: IntentionContext, text_input: TextInput):
+    return f'create_task ({context.confidence}): {text_input}'
 
 
 @intention_router.route(intentions.ANSWER_QUESTION)
-async def answer_question_handler(intention, text_input):
-    return f'answer_question: {text_input}'
+async def answer_question_handler(intention: Intention, context: IntentionContext, text_input: TextInput):
+    return f'answer_question ({context.confidence}): {text_input}'
 
 
 @intention_router.route(intentions.GIVE_A_JOKE)
-async def give_a_joke_handler(intention, text_input):
-    return f'give_a_joke: {text_input}'
+async def give_a_joke_handler(intention: Intention, context: IntentionContext, text_input: TextInput):
+    return f'give_a_joke ({context.confidence}): {text_input}'
 
 
 async def main():

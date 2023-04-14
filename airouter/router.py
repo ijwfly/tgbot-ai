@@ -1,3 +1,6 @@
+import dataclasses
+
+
 class TextInput:
     """
     Represents a text input from a user. You can use this class as base to pass additional information to a handler.
@@ -21,11 +24,16 @@ class Intention:
         return f"Intention(name={self.name}, examples={self.examples})"
 
 
+@dataclasses.dataclass
+class IntentionContext:
+    confidence: float
+
+
 class IntentionHandler:
     """
     Represents a handler for a specific intention.
     """
-    def __call__(self, intention: Intention, text_input: TextInput):
+    def __call__(self, intention: Intention, intention_context: IntentionContext, text_input: TextInput):
         pass
 
 

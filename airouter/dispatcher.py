@@ -16,6 +16,6 @@ class IntentionDispatcher:
     async def dispatch(self, text_input: TextInput):
         if not self.initialized():
             raise ValueError('Intention dispatcher is not initialized')
-        intention = await self.processor.process(text_input.text)
+        intention, context = await self.processor.process(text_input.text)
         handler = self.router.get_handler(intention)
-        return await handler(intention, text_input)
+        return await handler(intention, context, text_input)
