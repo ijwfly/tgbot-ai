@@ -29,6 +29,20 @@ class EmbeddedIntention:
         similarities = [vector_similarity(avg_embedding, example.embedding) for example in self.embedded_examples]
         return np.mean(similarities)
 
+    def lowest_inner_similarity(self):
+        if not self.initialized():
+            raise ValueError('Embedded intention is not initialized')
+        avg_embedding = self.avg_embedding()
+        similarities = [vector_similarity(avg_embedding, example.embedding) for example in self.embedded_examples]
+        return np.min(similarities)
+
+    def highest_inner_similarity(self):
+        if not self.initialized():
+            raise ValueError('Embedded intention is not initialized')
+        avg_embedding = self.avg_embedding()
+        similarities = [vector_similarity(avg_embedding, example.embedding) for example in self.embedded_examples]
+        return np.max(similarities)
+
     async def build(self):
         examples = self.intention.examples
         self.embedded_examples = await get_embeddings(examples)
@@ -87,9 +101,19 @@ class IntentionProcessor:
         for embedded_intention in self._embedded_intentions:
             await embedded_intention.build()
 
+        self.print_debug_info()
+
         errors = IntentionValidator(self._embedded_intentions).validate()
         if errors:
             raise ValueError('Intention errors: ', errors)
+
+    def print_debug_info(self):
+        for embedded_intention in self._embedded_intentions:
+            print(f'Intention: {embedded_intention.intention.name}')
+            print(f'Avg inner similarity: {embedded_intention.avg_inner_similarity()}')
+            print(f'Lowest inner similarity: {embedded_intention.lowest_inner_similarity()}')
+            print(f'Highest inner similarity: {embedded_intention.highest_inner_similarity()}')
+            print()
 
     async def process(self, text: str):
         if not self.initialized():
@@ -100,8 +124,15 @@ class IntentionProcessor:
         similarities = []
         for embedded_intention in self._embedded_intentions:
             avg_embedding = embedded_intention.avg_embedding()
+            low_inner_similarity = embedded_intention.lowest_inner_similarity()
+            high_inner_similarity = embedded_intention.highest_inner_similarity()
             similarity = vector_similarity(avg_embedding, embedded_text.embedding)
-            similarities.append(similarity)
-        max_similarity = max(similarities)
-        max_similarity_index = similarities.index(max_similarity)
-        return self._embedded_intentions[max_similarity_index].intention, IntentionContext(max_similarity)
+            similarity_percentage = (similarity - low_inner_similarity) / (high_inner_similarity - low_inner_similarity)
+
+            similarities.append((similarity_percentage, embedded_intention))
+        similarities = sorted(similarities, key=lambda x: x[0], reverse=True)
+        max_similarity = similarities[0][0]
+        if max_similarity > 0:
+            return similarities[0][1].intention, IntentionContext(max_similarity)
+        else:
+            return None, None

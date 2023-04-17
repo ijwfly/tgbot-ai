@@ -32,10 +32,16 @@ async def message_handler(message: Message) -> None:
     if message.from_user.id != TELEGRAM_ADMIN_ID:
         return
 
-    text_input = TextInput(message.text)
-    result = await intention_dispatcher.dispatch(text_input)
+    intention_text, *params_texts = message.text.split('\n')
+    # params_texts = '\n'.join(params_texts)
 
-    await message.answer(result)
+    await message.chat.do('typing')
+    text_input = TextInput(intention_text)
+    result = await intention_dispatcher.dispatch(text_input)
+    if result is not None:
+        await message.answer(result)
+    else:
+        await message.answer('Не удалось распознать намерение')
 
 
 @intention_router.route(intentions.CREATE_TASK)

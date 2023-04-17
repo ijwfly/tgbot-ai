@@ -4,6 +4,8 @@ from typing import List
 import numpy as np
 import openai
 
+from airouter.openai_utils.cache import FileCache
+
 EMBEDDING_MODEL = 'text-embedding-ada-002'
 
 
@@ -17,6 +19,7 @@ class EmbeddedText:
     embedding: List[float]
 
 
+@FileCache(cache_file='embeddings.pkl', save_interval=1)
 async def get_embeddings(strings: List[str]) -> List[EmbeddedText]:
     response = await openai.Embedding.acreate(
         model=EMBEDDING_MODEL,
@@ -27,4 +30,3 @@ async def get_embeddings(strings: List[str]) -> List[EmbeddedText]:
         embedding = embedding_openai.embedding
         result.append(EmbeddedText(string, embedding))
     return result
-

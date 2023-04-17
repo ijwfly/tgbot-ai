@@ -17,5 +17,7 @@ class IntentionDispatcher:
         if not self.initialized():
             raise ValueError('Intention dispatcher is not initialized')
         intention, context = await self.processor.process(text_input.text)
+        if intention is None:
+            return None
         handler = self.router.get_handler(intention)
         return await handler(intention, context, text_input)
